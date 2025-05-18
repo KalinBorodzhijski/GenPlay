@@ -31,7 +31,7 @@ class Dino:
         ]
 
         # Ducking frames (13–17)
-        duck_indices = list(range(13, 18))
+        duck_indices = config.DINO_DUCK_FRAMES
         self.duck_frames = [
             pygame.transform.scale(
                 sheet.subsurface(pygame.Rect(i * frame_width, 0, frame_width, frame_height)),

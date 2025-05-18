@@ -38,11 +38,18 @@ class DinoVisualizer:
         self.scores = [0 for _ in range(config.NUM_AGENTS)]
 
     def get_inputs(self, dino, obstacle):
-        dx = (obstacle.x - dino.x) / config.SCREEN_WIDTH if obstacle else 1.0
-        height = obstacle.height / 50 if obstacle else 0.0
+        if obstacle:
+            dx = (obstacle.x - dino.x) / config.SCREEN_WIDTH
+            obstacle_center_y = (obstacle.y + obstacle.height / 2) / config.SCREEN_HEIGHT
+            delta_y = (obstacle_center_y - dino.y) / config.SCREEN_HEIGHT
+        else:
+            dx = 1.0  # max distance
+            delta_y = 0.0  # neutral value
+
         y_pos = dino.y / config.SCREEN_HEIGHT
         y_vel = dino.velocity_y / 10.0
-        return [dx, height, y_pos, y_vel]
+
+        return [dx, delta_y, y_pos, y_vel, 1.0]
 
     def find_next_obstacle(self, core):
         for obs in core.obstacles:
@@ -61,8 +68,14 @@ class DinoVisualizer:
                 continue
 
             inputs = self.get_inputs(dino, next_obstacle)
-            if self.agents[i].decide(inputs):
+            jump, duck = self.agents[i].decide(inputs)
+            if jump and not duck:
                 dino.jump()
+            elif duck:
+                dino.duck()
+            else:
+                dino.stand_up()
+
 
             dino.update()
             dino.time_alive = getattr(dino, 'time_alive', 0) + 1

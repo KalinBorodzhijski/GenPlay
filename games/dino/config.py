@@ -6,7 +6,7 @@ SCREEN_HEIGHT = 300
 GROUND_HEIGHT = 40
 
 GRAVITY = 0.6
-JUMP_VELOCITY = -10
+JUMP_VELOCITY = -8
 
 FPS = 60
 
@@ -16,7 +16,7 @@ DINO_HEIGHT = 40
 MIN_OBSTACLE_DELAY = 500    # ms
 MAX_OBSTACLE_DELAY = 1500   # ms
 
-DINO_DUCK_FRAMES = list(range(13, 18))
+DINO_DUCK_FRAMES = list(range(19, 24))
 
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "assets")
 
@@ -25,5 +25,5 @@ CACTUS_SPRITE = os.path.join(ASSETS_PATH, "cactus.png")
 BACKGROUND_IMAGE = os.path.join(ASSETS_PATH, "background.jpg")
 
 # Training parameters
-NUM_AGENTS = 100
-INPUT_SIZE = 4
+NUM_AGENTS = 1000
+INPUT_SIZE = 5

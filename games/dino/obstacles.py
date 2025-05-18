@@ -39,5 +39,5 @@ class Obstacle:
 class FlyingObstacle(Obstacle):
     def __init__(self, x, speed):
         super().__init__(x, speed)
-        self.height = 30
-        self.y = config.SCREEN_HEIGHT - config.GROUND_HEIGHT - 100
+        self.height = 40
+        self.y = config.SCREEN_HEIGHT - config.GROUND_HEIGHT - 80

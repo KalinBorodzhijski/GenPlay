@@ -25,7 +25,7 @@ class DinoCore:
     def spawn_obstacle(self):
         if self.obstacles and self.obstacles[-1].x > config.SCREEN_WIDTH - 200:
             return
-        if random.random() < 0.8:
+        if random.random() < 0:
             self.obstacles.append(Obstacle(config.SCREEN_WIDTH, self.game_speed))
         else:
             self.obstacles.append(FlyingObstacle(config.SCREEN_WIDTH, self.game_speed))

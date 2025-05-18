@@ -25,7 +25,7 @@ class Agent:
     that can be evolved using a genetic algorithm.
     """
 
-    def __init__(self, input_size: int, hidden_size: int = 4):
+    def __init__(self, input_size: int, hidden_size: int = 4, output_size: int = 2):
         """
         Initializes an agent with random weights for a single-hidden-layer network.
 
@@ -34,14 +34,13 @@ class Agent:
         """
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.output_size = 1  # Single output: jump (1) or not (0)
+        self.output_size = output_size
 
-        # Genome = flattened array of all weights and biases
         self.genome_size = (
-            input_size * hidden_size +  # Input -> Hidden weights
-            hidden_size +               # Hidden layer biases
-            hidden_size * self.output_size +  # Hidden -> Output weights
-            self.output_size                   # Output bias
+            input_size * hidden_size +
+            hidden_size +
+            hidden_size * output_size +
+            output_size
         )
 
         self.genome = np.random.uniform(-1, 1, self.genome_size)
@@ -55,7 +54,7 @@ class Agent:
         :param mutation_strength: Max change per mutation
         :return: A new mutated Agent instance
         """
-        new_agent = Agent(self.input_size, self.hidden_size)
+        new_agent = Agent(self.input_size, self.hidden_size, self.output_size)
         new_agent.genome = np.copy(self.genome)
 
         for i in range(len(new_agent.genome)):
@@ -73,7 +72,6 @@ class Agent:
         """
         inputs = np.array(inputs)
 
-        # Unpack genome into weights/biases
         idx = 0
         w1 = self.genome[idx:idx + self.input_size * self.hidden_size].reshape(self.hidden_size, self.input_size)
         idx += self.input_size * self.hidden_size
@@ -86,9 +84,11 @@ class Agent:
 
         b2 = self.genome[idx:idx + self.output_size]
 
-        # Forward pass
+        # Feedforward
         hidden = np.tanh(np.dot(w1, inputs) + b1)
-        output = np.dot(w2, hidden) + b2
-        decision = output[0] > 0
+        output = np.dot(w2, hidden) + b2  # no activation to allow thresholding
 
-        return decision
+        jump = output[0] > 0.5
+        duck = output[1] > 0.5
+
+        return jump, duck
