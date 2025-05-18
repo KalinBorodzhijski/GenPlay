@@ -27,3 +27,5 @@ BACKGROUND_IMAGE = os.path.join(ASSETS_PATH, "background.jpg")
 # Training parameters
 NUM_AGENTS = 1000
 INPUT_SIZE = 5
+
+SAVE_MODEL_PATH = "model/dino_best.pkl"

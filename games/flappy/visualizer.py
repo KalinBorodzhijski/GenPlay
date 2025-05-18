@@ -46,7 +46,7 @@ class VisualTrainer:
             best_fitness = self.fitness_scores[best_index]
             best_agent = self.agents[best_index]
 
-            save_best_agent(best_agent, best_fitness, self.generation)
+            save_best_agent(best_agent, best_fitness, self.generation, config.SAVE_MODEL_PATH)
 
             self.agents = evolve_agents(self.agents, self.fitness_scores)
 
@@ -158,12 +158,12 @@ class VisualTrainer:
         """
         Loads and plays the best saved agent.
         """
-        best = load_best_agent()
+        best = load_best_agent(config.SAVE_MODEL_PATH)
         if not best:
             print("No saved agent found.")
             return
 
-        agent = create_agent_from_genome(best["genome"], input_size=4)
+        agent = create_agent_from_genome(best["genome"], input_size=5)
         engine = GameCore(self.bird_sprite, self.pipe_sprite_sheet, num_agents=1)
         bird = engine.birds[0]
 

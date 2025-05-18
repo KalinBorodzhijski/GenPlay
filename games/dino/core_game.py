@@ -14,13 +14,11 @@ class DinoCore:
         self.reset()
 
     def reset(self):
-        self.dino = Dino(50, config.SCREEN_HEIGHT - config.GROUND_HEIGHT - config.DINO_HEIGHT)
         self.obstacles = []
         self.last_spawn_time = pygame.time.get_ticks()
         self.next_spawn_delay = random.randint(config.MIN_OBSTACLE_DELAY, config.MAX_OBSTACLE_DELAY)
-        self.score = 0
-        self.alive = True
         self.game_speed = 6
+        self.speed_timer = pygame.time.get_ticks()
 
     def spawn_obstacle(self):
         if self.obstacles and self.obstacles[-1].x > config.SCREEN_WIDTH - 200:
@@ -30,46 +28,57 @@ class DinoCore:
         else:
             self.obstacles.append(FlyingObstacle(config.SCREEN_WIDTH, self.game_speed))
 
-    def update(self):
-        if self.score % 5 == 0 and self.score != 0:
-            self.game_speed += 0.02  # Gradual speed increase
-        self.game_speed = min(self.game_speed, 12)  # Cap the speed
 
-        self.dino.update()
+    def update(self, dinos: list):
+        # Gradually increase speed
+        now = pygame.time.get_ticks()
+        if now - self.speed_timer > 3000:
+            self.game_speed += 0.1
+            self.game_speed = min(self.game_speed, 12)
+            self.speed_timer = now
 
+        # Obstacle spawning
         now = pygame.time.get_ticks()
         if now - self.last_spawn_time > self.next_spawn_delay:
             self.spawn_obstacle()
             self.last_spawn_time = now
             self.next_spawn_delay = random.randint(config.MIN_OBSTACLE_DELAY, config.MAX_OBSTACLE_DELAY)
 
+        # Update obstacles
         for obstacle in self.obstacles:
             obstacle.update()
 
+        # Remove off-screen obstacles
         self.obstacles = [o for o in self.obstacles if not o.is_off_screen()]
 
-        for obs in self.obstacles:
-            if not obs.passed and obs.x + obs.width < self.dino.x:
-                obs.passed = True
-                self.score += 1
+        # Process each dino
+        for i, dino in enumerate(dinos):
+            if not dino.alive:
+                continue
 
-        if self.check_collision():
-            self.dino.alive = False
-            self.alive = False
+            dino.update()
 
-    def check_collision(self):
-        dino_bounds = self.dino.get_bounds()
-        for obs in self.obstacles:
-            o_bounds = obs.get_bounds()
-            if (
-                dino_bounds[2] > o_bounds[0] and dino_bounds[0] < o_bounds[2] and
-                dino_bounds[3] > o_bounds[1] and dino_bounds[1] < o_bounds[3]
-            ):
-                return True
-        return False
+            # Track obstacles passed per dino
+            for obs in self.obstacles:
+                if not hasattr(obs, 'passed_by'):
+                    obs.passed_by = set()
+
+                if i not in obs.passed_by and obs.x + obs.width < dino.x:
+                    obs.passed_by.add(i)
+                    dino.score = getattr(dino, 'score', 0) + 1
+
+            # Check for collision
+            dino_bounds = dino.get_bounds()
+            for obs in self.obstacles:
+                o_bounds = obs.get_bounds()
+                if (
+                    dino_bounds[2] > o_bounds[0] and dino_bounds[0] < o_bounds[2] and
+                    dino_bounds[3] > o_bounds[1] and dino_bounds[1] < o_bounds[3]
+                ):
+                    dino.alive = False
 
     def get_next_obstacle(self):
         for obs in self.obstacles:
-            if obs.x + obs.width > self.dino.x:
+            if obs.x + obs.width > 0:
                 return obs
         return None

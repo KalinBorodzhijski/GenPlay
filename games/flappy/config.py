@@ -26,4 +26,4 @@ IMAGE_PIPE_HEIGHT = 80
 
 #Training parameters
 NUM_AGENTS = 2000
-SAVE_MODEL_PATH = "models/best_agent.pkl"
+SAVE_MODEL_PATH = "model/flappy_best.pkl"

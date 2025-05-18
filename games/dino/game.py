@@ -14,6 +14,7 @@ class DinoGame:
         self.font = pygame.font.SysFont("Arial", 24)
 
         self.core = DinoCore()
+        self.dino = Dino(50, config.SCREEN_HEIGHT - config.GROUND_HEIGHT - config.DINO_HEIGHT)
         self.running = True
 
     def draw(self):
@@ -26,21 +27,24 @@ class DinoGame:
             (100, 100, 100),  # dark gray ground
             (0, config.SCREEN_HEIGHT - config.GROUND_HEIGHT, config.SCREEN_WIDTH, config.GROUND_HEIGHT)
         )
-        # Draw dino and obstacles
-        self.core.dino.draw(self.screen)
+        # Obstacles and dino
         for obs in self.core.obstacles:
             obs.draw(self.screen)
 
-        # Score
-        self.screen.blit(self.font.render(f"Score: {self.core.score}", True, (0, 0, 0)), (10, 10))
+        self.dino.draw(self.screen)
 
-        if not self.core.dino.alive:
-            self.screen.blit(
-                self.font.render("Game Over - Click to Restart", True, (0, 0, 0)),
-                (config.SCREEN_WIDTH // 2 - 100, config.SCREEN_HEIGHT // 2)
-            )
+        # Score
+        self.draw_text(f"Score: {getattr(self.dino, 'score', 0)}", 10, 10)
+
+        if not self.dino.alive:
+                self.draw_text("Game Over - Click to Restart", config.SCREEN_WIDTH // 2 - 100, config.SCREEN_HEIGHT // 2)
+
 
         pygame.display.flip()
+
+    def draw_text(self, text, x, y):
+        label = self.font.render(text, True, (0, 0, 0))
+        self.screen.blit(label, (x, y))
 
     def handle_events(self):
         keys = pygame.key.get_pressed()
@@ -50,26 +54,30 @@ class DinoGame:
                 self.running = False
 
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.core.dino.alive:
-                    # Only jump if not ducking
-                    if not self.core.dino.is_ducking:
-                        self.core.dino.jump()
+                if self.dino.alive:
+                    if not self.dino.is_ducking:
+                        self.dino.jump()
                 else:
-                    self.core.reset()
+                    self.reset()
 
-        # Handle ducking with spacebar (only if not jumping)
-        if self.core.dino.on_ground and not self.core.dino.velocity_y:
+        # Ducking
+        if self.dino.on_ground and self.dino.alive:
             if keys[pygame.K_SPACE]:
-                self.core.dino.duck()
+                self.dino.duck()
             else:
-                self.core.dino.stand_up()
+                self.dino.stand_up()
+
+    def reset(self):
+        self.core.reset()
+        self.dino = Dino(50, config.SCREEN_HEIGHT - config.GROUND_HEIGHT - config.DINO_HEIGHT)
+
 
     def run(self):
         while self.running:
             self.clock.tick(config.FPS)
             self.handle_events()
-            if self.core.dino.alive:
-                self.core.update()
+            if self.dino.alive:
+                self.core.update([self.dino])
             self.draw()
 
         pygame.quit()
