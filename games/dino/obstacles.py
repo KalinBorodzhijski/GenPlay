@@ -25,7 +25,7 @@ class Obstacle:
         return self.x + self.width < 0
 
     def get_bounds(self):
-        padding = 5  # tweak as needed
+        padding = 5
         return (
             self.x + padding,
             self.y + padding,

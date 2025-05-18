@@ -37,19 +37,20 @@ class DinoVisualizer:
         self.dinos = [Dino(50, config.SCREEN_HEIGHT - config.GROUND_HEIGHT - config.DINO_HEIGHT) for _ in range(config.NUM_AGENTS)]
         self.scores = [0 for _ in range(config.NUM_AGENTS)]
 
+
     def get_inputs(self, dino, obstacle):
         if obstacle:
             dx = (obstacle.x - dino.x) / config.SCREEN_WIDTH
-            obstacle_center_y = (obstacle.y + obstacle.height / 2) / config.SCREEN_HEIGHT
-            delta_y = (obstacle_center_y - dino.y) / config.SCREEN_HEIGHT
+            obstacle_y = obstacle.y / config.SCREEN_HEIGHT
+            obstacle_height = obstacle.height / config.SCREEN_HEIGHT
         else:
-            dx = 1.0  # max distance
-            delta_y = 0.0  # neutral value
+            dx = 1.0
+            obstacle_y = 0.0
+            obstacle_height = 0.0
 
-        y_pos = dino.y / config.SCREEN_HEIGHT
         y_vel = dino.velocity_y / 10.0
 
-        return [dx, delta_y, y_pos, y_vel, 1.0]
+        return [dx, obstacle_y, obstacle_height, y_vel, 1.0]
 
     def find_next_obstacle(self, core):
         for obs in core.obstacles:
@@ -69,8 +70,10 @@ class DinoVisualizer:
 
             inputs = self.get_inputs(dino, next_obstacle)
             jump, duck = self.agents[i].decide(inputs)
-            if jump and not duck:
+            # Prioritize jump over duck
+            if jump:
                 dino.jump()
+                dino.stand_up()
             elif duck:
                 dino.duck()
             else:

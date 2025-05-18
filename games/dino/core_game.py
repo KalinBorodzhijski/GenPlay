@@ -25,7 +25,7 @@ class DinoCore:
     def spawn_obstacle(self):
         if self.obstacles and self.obstacles[-1].x > config.SCREEN_WIDTH - 200:
             return
-        if random.random() < 0:
+        if random.random() < 0.7:  # 70% chance to spawn a cactus
             self.obstacles.append(Obstacle(config.SCREEN_WIDTH, self.game_speed))
         else:
             self.obstacles.append(FlyingObstacle(config.SCREEN_WIDTH, self.game_speed))
@@ -33,7 +33,7 @@ class DinoCore:
     def update(self):
         if self.score % 5 == 0 and self.score != 0:
             self.game_speed += 0.02  # Gradual speed increase
-        self.game_speed = min(self.game_speed, 13)  # Cap the speed
+        self.game_speed = min(self.game_speed, 12)  # Cap the speed
 
         self.dino.update()
 

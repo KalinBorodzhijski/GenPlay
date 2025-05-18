@@ -43,15 +43,26 @@ class DinoGame:
         pygame.display.flip()
 
     def handle_events(self):
+        keys = pygame.key.get_pressed()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.core.dino.alive:
-                    self.core.dino.jump()
+                    # Only jump if not ducking
+                    if not self.core.dino.is_ducking:
+                        self.core.dino.jump()
                 else:
                     self.core.reset()
+
+        # Handle ducking with spacebar (only if not jumping)
+        if self.core.dino.on_ground and not self.core.dino.velocity_y:
+            if keys[pygame.K_SPACE]:
+                self.core.dino.duck()
+            else:
+                self.core.dino.stand_up()
 
     def run(self):
         while self.running:

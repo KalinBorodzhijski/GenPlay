@@ -63,12 +63,12 @@ class Agent:
 
         return new_agent
 
-    def decide(self, inputs: list[float]) -> bool:
+    def decide(self, inputs: list[float]) -> tuple[bool, bool]:
         """
-        Feedforward neural network: decide to jump or not.
+        Feedforward neural network: decide actions.
 
-        :param inputs: List of input features (e.g. bird position, pipe gap)
-        :return: True to jump, False to do nothing
+        :param inputs: 5 normalized features
+        :return: (jump: bool, duck: bool)
         """
         inputs = np.array(inputs)
 

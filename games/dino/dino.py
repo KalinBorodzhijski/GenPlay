@@ -86,14 +86,6 @@ class Dino:
             self.animation_timer = 0
             self.current_frame = (self.current_frame + 1) % len(self.frames)
 
-        # Keyboard duck check (spacebar = duck for now)
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_SPACE] and self.on_ground:
-            self.duck()
-        elif not keys[pygame.K_SPACE] and self.is_ducking:
-            self.stand_up()
-
-
     def jump(self):
         if self.on_ground:
             self.velocity_y = config.JUMP_VELOCITY
