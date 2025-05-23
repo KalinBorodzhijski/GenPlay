@@ -2,6 +2,7 @@ import pickle
 import numpy as np
 import os
 from core.agent import Agent
+import core.config as config
 
 
 def save_best_agent(agent: Agent, fitness: float, generation: int, save_path: str):
@@ -32,7 +33,7 @@ def load_best_agent(save_path: str) -> dict | None:
     with open(save_path, "rb") as f:
         return pickle.load(f)
 
-def create_agent_from_genome(genome: list[float], input_size: int, hidden_size: int = 4) -> Agent:
+def create_agent_from_genome(genome: list[float], input_size: int, hidden_size: int = config.HIDDEN_LAYER_ONE_UNITS) -> Agent:
     """
     Creates an agent from a genome (used in replay/view mode).
     """

@@ -17,7 +17,7 @@ Input features from the game (Flappy Bird) expected by the agent:
 All inputs should be normalized before being passed to the agent's decision function.
 """
 import numpy as np
-
+import core.config as config
 
 class Agent:
     """
@@ -25,7 +25,7 @@ class Agent:
     that can be evolved using a genetic algorithm.
     """
 
-    def __init__(self, input_size: int, hidden_size: int = 4, output_size: int = 2):
+    def __init__(self, input_size: int, hidden_size: int = config.HIDDEN_LAYER_ONE_UNITS, output_size: int = 2):
         """
         Initializes an agent with random weights for a single-hidden-layer network.
 

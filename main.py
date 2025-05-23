@@ -6,10 +6,13 @@ from games.flappy.game import FlappyGame
 from games.dino.visualizer import DinoVisualizer as DinoTrainer
 from games.dino.game import DinoGame
 
+from core.multi_train import multi_train
+
 def prompt_game():
     print("\nSelect game:")
     print("1 - Flappy Bird")
     print("2 - Dino Runner")
+    print("3 - Multi-game training")
     print("Q - Quit")
     choice = input("Enter your choice: ").strip().lower()
     return choice
@@ -18,11 +21,11 @@ def prompt_mode():
     print("\nSelect mode:")
     print("1 - Play manually")
     print("2 - Train agents")
-    print("3 - Watch best agent so far")
+    print("3 - Watch best agent for this game")
+    print("4 - Watch best combined (multi-game) agent")
     print("B - Back to game selection")
     print("Q - Quit")
-    choice = input("Enter your choice: ").strip().lower()
-    return choice
+    return input("Enter your choice: ").strip().lower()
 
 def run_game_menu(game_name, GameClass, TrainerClass):
     while True:
@@ -39,6 +42,10 @@ def run_game_menu(game_name, GameClass, TrainerClass):
         elif choice == "3":
             trainer = TrainerClass()
             trainer.watch_best()
+
+        elif choice == "4":
+            trainer = TrainerClass()
+            trainer.watch_best("model/multigame_best.pkl")
 
         elif choice in ("b", "back"):
             break
@@ -59,6 +66,10 @@ def main():
 
         elif game_choice == "2":
             run_game_menu("Dino", DinoGame, DinoTrainer)
+
+        elif game_choice == "3":
+            print("\nStarting multi-game training...\n")
+            multi_train()
 
         elif game_choice in ("q", "quit", "exit"):
             print("Exiting.")

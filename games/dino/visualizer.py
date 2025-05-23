@@ -1,6 +1,6 @@
 import pygame
 import time
-import games.dino.config as config
+import games.dino.config as dino_config
 from games.dino.dino import Dino
 from games.dino.core_game import DinoCore
 from core.agent import Agent
@@ -12,7 +12,7 @@ from core.model_utils import *
 class DinoVisualizer:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((config.SCREEN_WIDTH, config.SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((dino_config.SCREEN_WIDTH, dino_config.SCREEN_HEIGHT))
         pygame.display.set_caption("Dino Training Visualizer")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("Arial", 24)
@@ -25,23 +25,23 @@ class DinoVisualizer:
 
     def reset_generation(self):
         if self.agents:
-            fitness_scores = [self.scores[i] + getattr(self.dinos[i], 'time_alive', 0) for i in range(config.NUM_AGENTS)]
-            best_index = max(range(config.NUM_AGENTS), key=lambda i: fitness_scores[i])
-            save_best_agent(self.agents[best_index], fitness_scores[best_index], self.generation, config.SAVE_MODEL_PATH)
+            fitness_scores = [self.scores[i] + getattr(self.dinos[i], 'time_alive', 0) for i in range(dino_config.NUM_AGENTS)]
+            best_index = max(range(dino_config.NUM_AGENTS), key=lambda i: fitness_scores[i])
+            save_best_agent(self.agents[best_index], fitness_scores[best_index], self.generation, dino_config.SAVE_MODEL_PATH)
             self.agents = evolve_agents(self.agents, fitness_scores)
         else:
-            self.agents = [Agent(config.INPUT_SIZE) for _ in range(config.NUM_AGENTS)]
+            self.agents = [Agent(dino_config.INPUT_SIZE) for _ in range(dino_config.NUM_AGENTS)]
 
         self.core.reset()
-        self.dinos = [Dino(50, config.SCREEN_HEIGHT - config.GROUND_HEIGHT - config.DINO_HEIGHT) for _ in range(config.NUM_AGENTS)]
-        self.scores = [0 for _ in range(config.NUM_AGENTS)]
+        self.dinos = [Dino(50, dino_config.SCREEN_HEIGHT - dino_config.GROUND_HEIGHT - dino_config.DINO_HEIGHT) for _ in range(dino_config.NUM_AGENTS)]
+        self.scores = [0 for _ in range(dino_config.NUM_AGENTS)]
 
 
     def get_inputs(self, dino, obstacle):
         if obstacle:
-            dx = (obstacle.x - dino.x) / config.SCREEN_WIDTH
-            obstacle_y = obstacle.y / config.SCREEN_HEIGHT
-            obstacle_height = obstacle.height / config.SCREEN_HEIGHT
+            dx = (obstacle.x - dino.x) / dino_config.SCREEN_WIDTH
+            obstacle_y = obstacle.y / dino_config.SCREEN_HEIGHT
+            obstacle_height = obstacle.height / dino_config.SCREEN_HEIGHT
         else:
             dx = 1.0
             obstacle_y = 0.0
@@ -110,7 +110,7 @@ class DinoVisualizer:
         pygame.draw.rect(
             self.screen,
             (100, 100, 100),
-            (0, config.SCREEN_HEIGHT - config.GROUND_HEIGHT, config.SCREEN_WIDTH, config.GROUND_HEIGHT)
+            (0, dino_config.SCREEN_HEIGHT - dino_config.GROUND_HEIGHT, dino_config.SCREEN_WIDTH, dino_config.GROUND_HEIGHT)
         )
 
         for obs in self.core.obstacles:
@@ -121,13 +121,13 @@ class DinoVisualizer:
                 dino.draw(self.screen)
 
         elapsed = time.time() - self.start_time
-        current_score = max(self.scores[i] for i in range(config.NUM_AGENTS) if self.dinos[i].alive) if any(d.alive for d in self.dinos) else 0
+        current_score = max(self.scores[i] for i in range(dino_config.NUM_AGENTS) if self.dinos[i].alive) if any(d.alive for d in self.dinos) else 0
         alive_count = sum(1 for d in self.dinos if d.alive)
 
         self.draw_text(f"Generation: {self.generation}", 10, 10)
         self.draw_text(f"Training Time: {elapsed:.1f}s", 10, 40)
         self.draw_text(f"Score: {current_score}", 10, 70)
-        self.draw_text(f"Alive: {alive_count}/{config.NUM_AGENTS}", 10, 100)
+        self.draw_text(f"Alive: {alive_count}/{dino_config.NUM_AGENTS}", 10, 100)
 
         pygame.display.flip()
 
@@ -144,31 +144,33 @@ class DinoVisualizer:
     def run(self):
         running = True
         while running:
-            self.clock.tick(config.FPS)
+            self.clock.tick(dino_config.FPS)
             running = self.handle_events()
             self.update()
             self.draw()
 
         pygame.quit()
     
-    def watch_best(self):
+    def watch_best(self, model_path=None):
         """
         Loads and plays the best saved agent on the Dino game.
+        :param model_path: Path to the saved model. If None, uses the default path.
         """
-        best = load_best_agent(config.SAVE_MODEL_PATH)
+        path = model_path if model_path else dino_config.SAVE_MODEL_PATH
+        best = load_best_agent(path)
         if not best:
             print("No saved Dino agent found.")
             return
 
-        agent = create_agent_from_genome(best["genome"], input_size=config.INPUT_SIZE)
-        dino = Dino(50, config.SCREEN_HEIGHT - config.GROUND_HEIGHT - config.DINO_HEIGHT)
+        agent = create_agent_from_genome(best["genome"], input_size=dino_config.INPUT_SIZE)
+        dino = Dino(50, dino_config.SCREEN_HEIGHT - dino_config.GROUND_HEIGHT - dino_config.DINO_HEIGHT)
         core = DinoCore()
 
         clock = pygame.time.Clock()
         running = True
 
         while running:
-            clock.tick(config.FPS)
+            clock.tick(dino_config.FPS)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -198,7 +200,7 @@ class DinoVisualizer:
             pygame.draw.rect(
                 self.screen,
                 (100, 100, 100),
-                (0, config.SCREEN_HEIGHT - config.GROUND_HEIGHT, config.SCREEN_WIDTH, config.GROUND_HEIGHT)
+                (0, dino_config.SCREEN_HEIGHT - dino_config.GROUND_HEIGHT, dino_config.SCREEN_WIDTH, dino_config.GROUND_HEIGHT)
             )
 
             for obs in core.obstacles:

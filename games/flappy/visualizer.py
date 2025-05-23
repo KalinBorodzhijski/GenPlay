@@ -154,16 +154,18 @@ class VisualTrainer:
 
         self.engine.update(agent_decisions=decisions)
 
-    def watch_best(self):
+    def watch_best(self, model_path=None):
         """
         Loads and plays the best saved agent.
+        :param model_path: Path to the saved model. If None, uses the default path.
         """
-        best = load_best_agent(config.SAVE_MODEL_PATH)
+        path = model_path if model_path else config.SAVE_MODEL_PATH
+        best = load_best_agent(path)
         if not best:
             print("No saved agent found.")
             return
 
-        agent = create_agent_from_genome(best["genome"], input_size=5)
+        agent = create_agent_from_genome(best["genome"], input_size=INPUT_SIZE)
         engine = GameCore(self.bird_sprite, self.pipe_sprite_sheet, num_agents=1)
         bird = engine.birds[0]
 
