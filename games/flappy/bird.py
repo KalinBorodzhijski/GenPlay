@@ -42,7 +42,6 @@ class Bird:
         self.frame_index = 0
         self.animation_counter = 0
 
-        self.time_alive = 0
         self.score = 0
         
 
@@ -52,7 +51,6 @@ class Bird:
         """
         self.velocity_y += self.gravity
         self.y += self.velocity_y
-        self.time_alive += 1
 
         # Animate
         self.animation_counter += 1

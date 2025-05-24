@@ -25,7 +25,7 @@ class DinoVisualizer:
 
     def reset_generation(self):
         if self.agents:
-            fitness_scores = [self.scores[i] + getattr(self.dinos[i], 'time_alive', 0) for i in range(dino_config.NUM_AGENTS)]
+            fitness_scores = [self.scores[i] for i in range(dino_config.NUM_AGENTS)]
             best_index = max(range(dino_config.NUM_AGENTS), key=lambda i: fitness_scores[i])
             save_best_agent(self.agents[best_index], fitness_scores[best_index], self.generation, dino_config.SAVE_MODEL_PATH)
             self.agents = evolve_agents(self.agents, fitness_scores)
@@ -35,7 +35,6 @@ class DinoVisualizer:
         self.core.reset()
         self.dinos = [Dino(50, dino_config.SCREEN_HEIGHT - dino_config.GROUND_HEIGHT - dino_config.DINO_HEIGHT) for _ in range(dino_config.NUM_AGENTS)]
         self.scores = [0 for _ in range(dino_config.NUM_AGENTS)]
-
 
     def get_inputs(self, dino, obstacle):
         if obstacle:
@@ -49,7 +48,13 @@ class DinoVisualizer:
 
         y_vel = dino.velocity_y / 10.0
 
-        return [dx, obstacle_y, obstacle_height, y_vel, 1.0]
+        return [
+            0.0,         # Fake vertical position for Dino
+            y_vel,       # Vertical velocity
+            dx,          # Horizontal distance
+            obstacle_y,  # Vertical distance (or use height if more useful)
+            10.0         # Game ID
+        ]
 
     def find_next_obstacle(self, core):
         for obs in core.obstacles:
@@ -68,17 +73,15 @@ class DinoVisualizer:
                 continue
 
             inputs = self.get_inputs(dino, next_obstacle)
-            jump, duck = self.agents[i].decide(inputs)
+            _, dino_jump, duck = self.agents[i].decide(inputs)
             # Prioritize jump over duck
-            if jump:
+            if dino_jump:
                 dino.jump()
                 dino.stand_up()
             elif duck:
                 dino.duck()
             else:
                 dino.stand_up()
-
-            dino.time_alive = getattr(dino, 'time_alive', 0) + 1
 
             if self.check_collision(dino):
                 dino.alive = False
@@ -187,8 +190,8 @@ class DinoVisualizer:
             else:
                 inputs = [1.0, 0.0, 0.0, 0.0, 1.0]
 
-            jump, duck = agent.decide(inputs)
-            if jump:
+            _, dino_jump, duck = agent.decide(inputs)
+            if dino_jump:
                 dino.jump()
                 dino.stand_up()
             elif duck:

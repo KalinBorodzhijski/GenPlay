@@ -14,7 +14,6 @@ class Dino:
         self.alive = True
         self.is_ducking = False
         self.score = 0
-        self.time_alive = 0
 
         # Load and split spritesheet
         sheet = pygame.image.load(config.DINO_SPRITESHEET).convert_alpha()

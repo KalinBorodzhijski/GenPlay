@@ -21,11 +21,11 @@ def get_flappy_inputs(bird, pipe):
     dx = pipe.x - bird.x
     dy = (pipe.gap_y + pipe.gap_size / 2) - bird.y
     return [
-        bird.y / flappy_config.SCREEN_HEIGHT,
-        bird.velocity_y / 10.0,
-        dx / flappy_config.SCREEN_WIDTH,
-        dy / flappy_config.SCREEN_HEIGHT,
-        0.0  # Game type: Flappy
+        bird.y / flappy_config.SCREEN_HEIGHT,         # vertical position
+        bird.velocity_y / 10.0,                       # vertical velocity
+        dx / flappy_config.SCREEN_WIDTH,              # horizontal distance
+        dy / flappy_config.SCREEN_HEIGHT,             # vertical distance to gap
+        0.0                                           # Game ID
     ]
 
 def get_dino_inputs(dino, obstacle):
@@ -33,14 +33,21 @@ def get_dino_inputs(dino, obstacle):
     obstacle_y = obstacle.y / dino_config.SCREEN_HEIGHT if obstacle else 0.0
     obstacle_height = obstacle.height / dino_config.SCREEN_HEIGHT if obstacle else 0.0
     y_vel = dino.velocity_y / 10.0
-    return [dx, obstacle_y, obstacle_height, y_vel, 1.0]  # Game type: Dino
+
+    return [
+        0.0,                # Fake Y position (Dino doesn't use it)
+        y_vel,              # Vertical velocity
+        dx,                 # Distance to obstacle
+        obstacle_y,         # Obstacle vertical position
+        10.0                # Game ID
+    ]
 
 def evaluate_on_flappy(agents, bird_sprite, pipe_sprite):
     flappy = FlappyCore(bird_sprite, pipe_sprite, num_agents=NUM_AGENTS)
     scores = [0] * NUM_AGENTS
-    max_score = 100
+    MAX_SCORE = 200
 
-    while flappy.alive and flappy.score < max_score:
+    while flappy.alive and flappy.score < MAX_SCORE:
         print(f"Flappy Score: {flappy.score}", end="\r")
         next_pipe = None
         for pipe in flappy.pipes:
@@ -57,12 +64,12 @@ def evaluate_on_flappy(agents, bird_sprite, pipe_sprite):
                 inputs = get_flappy_inputs(bird, next_pipe)
             else:
                 inputs = [bird.y / flappy_config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 0.0]
-            jump, _ = agents[i].decide(inputs)
-            decisions.append(jump)
+            flappy_jump, _, _ = agents[i].decide(inputs)
+            decisions.append(flappy_jump)
         flappy.update(agent_decisions=decisions)
 
     for i, bird in enumerate(flappy.birds):
-        scores[i] = bird.score #* 10 + bird.time_alive
+        scores[i] = bird.score
 
     return scores
 
@@ -71,7 +78,7 @@ def evaluate_on_dino(agents):
     dinos = [Dino(50, dino_config.SCREEN_HEIGHT - dino_config.GROUND_HEIGHT - dino_config.DINO_HEIGHT) for _ in range(NUM_AGENTS)]
     scores = [0] * NUM_AGENTS
 
-    MAX_SCORE = 100
+    MAX_SCORE = 200
 
     while any(d.alive for d in dinos) and max(d.score for d in dinos) < MAX_SCORE:
         print(f"Dino Score: {max(d.score for d in dinos)}", end="\r")
@@ -82,8 +89,8 @@ def evaluate_on_dino(agents):
             if not dino.alive:
                 continue
             inputs = get_dino_inputs(dino, next_obstacle)
-            jump, duck = agents[i].decide(inputs)
-            if jump:
+            _, dino_jump, duck = agents[i].decide(inputs)
+            if dino_jump:
                 dino.jump()
                 dino.stand_up()
             elif duck:
@@ -91,12 +98,11 @@ def evaluate_on_dino(agents):
             else:
                 dino.stand_up()
 
-            #dino.time_alive = getattr(dino, 'time_alive', 0) + 1
-            scores[i] = dino.score #* 10 + dino.time_alive
+            scores[i] = dino.score
 
     return scores
 
-def multi_train(generations=100):
+def multi_train(generations=1000):
     pygame.init()
     pygame.display.set_mode((1, 1))
     bird_sprite = pygame.image.load(flappy_config.BIRD_SPRITE).convert_alpha()
@@ -115,7 +121,7 @@ def multi_train(generations=100):
         dino_scores = evaluate_on_dino(agents)
 
         # Combine fitness
-        combined = [f + d for f, d in zip(flappy_scores, dino_scores)]
+        combined = [min(f, d) for f, d in zip(flappy_scores, dino_scores)]
 
         # Save best
         best_index = max(range(NUM_AGENTS), key=lambda i: combined[i])

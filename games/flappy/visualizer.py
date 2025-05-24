@@ -39,7 +39,7 @@ class VisualTrainer:
             # Calculate fitness as score (can be improved later)
             self.fitness_scores = []
             for bird in self.engine.birds:
-                fitness = bird.score * 10 + bird.time_alive
+                fitness = bird.score
                 self.fitness_scores.append(fitness)
 
             best_index = max(range(len(self.agents)), key=lambda i: self.fitness_scores[i])
@@ -149,8 +149,8 @@ class VisualTrainer:
             else:
                 inputs = [bird.y / config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 0.0]
 
-            jump, _ = agent.decide(inputs)
-            decisions.append(jump)
+            flappy_jump, _, _ = agent.decide(inputs)
+            decisions.append(flappy_jump)
 
         self.engine.update(agent_decisions=decisions)
 
@@ -186,8 +186,8 @@ class VisualTrainer:
             else:
                 inputs = [bird.y / config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 0.0]
 
-            jump, _ = agent.decide(inputs)
-            if jump:
+            flappy_jump, _, _ = agent.decide(inputs)
+            if flappy_jump:
                 bird.jump()
 
             engine.update(agent_decisions=[False])

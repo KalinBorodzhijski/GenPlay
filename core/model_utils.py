@@ -33,10 +33,15 @@ def load_best_agent(save_path: str) -> dict | None:
     with open(save_path, "rb") as f:
         return pickle.load(f)
 
-def create_agent_from_genome(genome: list[float], input_size: int, hidden_size: int = config.HIDDEN_LAYER_ONE_UNITS) -> Agent:
+def create_agent_from_genome(
+    genome: list[float],
+    input_size: int,
+    hidden1_size: int = config.HIDDEN_LAYER_ONE_UNITS,
+    hidden2_size: int = config.HIDDEN_LAYER_TWO_UNITS
+) -> Agent:
     """
     Creates an agent from a genome (used in replay/view mode).
     """
-    agent = Agent(input_size, hidden_size)
+    agent = Agent(input_size, hidden1_size, hidden2_size)
     agent.genome = np.array(genome)
     return agent
