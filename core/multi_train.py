@@ -78,7 +78,7 @@ def evaluate_on_dino(agents):
     dinos = [Dino(50, dino_config.SCREEN_HEIGHT - dino_config.GROUND_HEIGHT - dino_config.DINO_HEIGHT) for _ in range(NUM_AGENTS)]
     scores = [0] * NUM_AGENTS
 
-    MAX_SCORE = 200
+    MAX_SCORE = 100
 
     while any(d.alive for d in dinos) and max(d.score for d in dinos) < MAX_SCORE:
         print(f"Dino Score: {max(d.score for d in dinos)}", end="\r")
@@ -98,7 +98,7 @@ def evaluate_on_dino(agents):
             else:
                 dino.stand_up()
 
-            scores[i] = dino.score
+            scores[i] = dino.score * 100
 
     return scores
 
@@ -121,7 +121,7 @@ def multi_train(generations=1000):
         dino_scores = evaluate_on_dino(agents)
 
         # Combine fitness
-        combined = [min(f, d) for f, d in zip(flappy_scores, dino_scores)]
+        combined = [f + d for f, d in zip(flappy_scores, dino_scores)]
 
         # Save best
         best_index = max(range(NUM_AGENTS), key=lambda i: combined[i])

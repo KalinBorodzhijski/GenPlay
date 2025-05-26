@@ -30,25 +30,6 @@ class FlappyGame:
         self.pipe_sprite_sheet = pygame.image.load(config.PIPE_SPRITE).convert_alpha()
 
         self.engine = GameCore(self.bird_sprite, self.pipe_sprite_sheet)
-    
-    
-    # def run(self):
-    #     running = True
-    #     while running:
-    #         self.clock.tick(config.FPS)
-    #         running = self.handle_events()
-
-    #         self.update()   # Uses agents to make decisions and update the game
-    #         self.draw()
-
-    #         # When all birds are dead, evolve to next generation
-    #         if all(not bird.alive for bird in self.engine.birds):
-    #             self.generation += 1
-    #             self.reset_generation()
-
-    #     pygame.quit()
-        
-
 
     def run(self):
         running = True

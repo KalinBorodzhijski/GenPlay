@@ -18,13 +18,10 @@ class DinoGame:
         self.running = True
 
     def draw(self):
-        # Fill background with solid color
-        self.screen.fill((240, 240, 240))  # light gray
-
-        # Draw ground
+        self.screen.fill((240, 240, 240))
         pygame.draw.rect(
             self.screen,
-            (100, 100, 100),  # dark gray ground
+            (100, 100, 100),
             (0, config.SCREEN_HEIGHT - config.GROUND_HEIGHT, config.SCREEN_WIDTH, config.GROUND_HEIGHT)
         )
         # Obstacles and dino

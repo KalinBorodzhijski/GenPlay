@@ -67,6 +67,8 @@ class DinoVisualizer:
 
         next_obstacle = self.core.get_next_obstacle()
         alive_count = 0
+        best_score = 0
+        best_index = -1
 
         for i, dino in enumerate(self.dinos):
             if not dino.alive:
@@ -92,6 +94,15 @@ class DinoVisualizer:
                 if not obs.passed and obs.x + obs.width < dino.x:
                     obs.passed = True
                     self.scores[i] = getattr(dino, 'score', 0)
+
+                    if self.scores[i] > best_score:
+                        best_score = self.scores[i]
+                        best_index = i
+
+        if best_score % 50 == 0 and best_score != 0:
+            if best_index != -1:
+                save_best_agent(self.agents[best_index], best_score, self.generation, dino_config.SAVE_MODEL_PATH)
+                print(f"[Checkpoint] Saved agent at score {best_score}")
 
         if alive_count == 0:
             self.generation += 1

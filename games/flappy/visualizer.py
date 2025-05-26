@@ -36,7 +36,6 @@ class VisualTrainer:
         Also handles fitness evaluation and saves the best agent.
         """
         if self.agents:
-            # Calculate fitness as score (can be improved later)
             self.fitness_scores = []
             for bird in self.engine.birds:
                 fitness = bird.score
@@ -137,6 +136,8 @@ class VisualTrainer:
     def update(self):
         next_pipe = self.find_next_pipe()
         decisions = []
+        best_score = 0
+        best_index = -1
         for i, bird in enumerate(self.engine.birds):
             if not bird.alive:
                 decisions.append(False)
@@ -151,6 +152,16 @@ class VisualTrainer:
 
             flappy_jump, _, _ = agent.decide(inputs)
             decisions.append(flappy_jump)
+
+            if bird.score > best_score:
+                best_score = bird.score
+                best_index = i
+
+        if best_score % 50 == 0 and best_score != 0:
+            best_agent = self.agents[best_index]
+            save_best_agent(best_agent, best_score, self.generation, config.SAVE_MODEL_PATH)
+            print(f"[Checkpoint] Saved agent at score {best_score}")
+
 
         self.engine.update(agent_decisions=decisions)
 
