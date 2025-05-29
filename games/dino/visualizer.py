@@ -3,9 +3,9 @@ import time
 import games.dino.config as dino_config
 from games.dino.dino import Dino
 from games.dino.core_game import DinoCore
-from core.genetic_algorithm.agent import Agent
-from core.genetic_algorithm.ga import evolve_agents
-from core.genetic_algorithm.model_utils import *
+from core.agent import Agent
+from core.ga import evolve_agents
+from core.model_utils import *
 
 
 

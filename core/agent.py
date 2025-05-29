@@ -11,7 +11,7 @@ its neural network weights (genome).
 All inputs should be normalized before being passed to the agent's decision function.
 """
 import numpy as np
-import core.genetic_algorithm.config as config
+import core.config as config
 
 class Agent:
     """
