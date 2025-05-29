@@ -15,24 +15,41 @@ import core.config as config
 
 class Agent:
     """
-    Represents a neural network-based agent with weights
-    that can be evolved using a genetic algorithm.
+    Neural network agent with shared hidden layer and two output heads:
+    - Flappy head: output[0] = jump
+    - Dino head: output[1] = jump, output[2] = duck
     """
 
-    def __init__(self, input_size, hidden_size=config.HIDDEN_LAYER_ONE_UNITS, output_size=config.OUTPUT_SIZE):
-        self.input_size = input_size
+    def __init__(self, input_size, hidden_size=config.HIDDEN_LAYER_ONE_UNITS):
+        self.input_size = input_size + 2  # Add 2 for one-hot game encoding
         self.hidden_size = hidden_size
-        self.output_size = output_size
 
-        # One hidden layer: input → hidden → output
+        # Output sizes
+        self.flappy_output_size = 1
+        self.dino_output_size = 2
+
+        
+        # Genome layout:
+        # Input → Hidden
+        self.w1_size = self.input_size * self.hidden_size
+        self.b1_size = self.hidden_size
+
+        # Hidden → Flappy Output
+        self.wf_size = self.hidden_size * self.flappy_output_size
+        self.bf_size = self.flappy_output_size
+
+        # Hidden → Dino Output
+        self.wd_size = self.hidden_size * self.dino_output_size
+        self.bd_size = self.dino_output_size
+
         self.genome_size = (
-            input_size * hidden_size +
-            hidden_size +
-            hidden_size * output_size +
-            output_size
+            self.w1_size + self.b1_size +
+            self.wf_size + self.bf_size +
+            self.wd_size + self.bd_size
         )
 
         self.genome = np.random.uniform(-1, 1, self.genome_size)
+
 
         
     def clone_with_mutation(self, mutation_rate=0.05, mutation_strength=0.5):
@@ -43,7 +60,7 @@ class Agent:
         :param mutation_strength: Max change per mutation
         :return: A new mutated Agent instance
         """
-        new_agent = Agent(self.input_size)
+        new_agent = Agent(self.input_size - 2, self.hidden_size)
         new_agent.genome = np.copy(self.genome)
 
         for i in range(len(new_agent.genome)):
@@ -53,27 +70,47 @@ class Agent:
         return new_agent
     
     def decide(self, inputs: list[float]) -> tuple[bool, bool, bool]:
+        """
+        Expects inputs including one-hot game encoding as last 2 elements: [features..., is_flappy, is_dino]
+        Returns a tuple: (flappy_jump, dino_jump, duck)
+        """
         inputs = np.array(inputs)
         idx = 0
 
-        # Hidden layer
-        w1 = self.genome[idx:idx + self.input_size * self.hidden_size].reshape(self.hidden_size, self.input_size)
-        idx += self.input_size * self.hidden_size
-        b1 = self.genome[idx:idx + self.hidden_size]
-        idx += self.hidden_size
+        # Shared hidden layer
+        w1 = self.genome[idx:idx + self.w1_size].reshape(self.hidden_size, self.input_size)
+        idx += self.w1_size
+        b1 = self.genome[idx:idx + self.b1_size]
+        idx += self.b1_size
 
-        # Output layer
-        w2 = self.genome[idx:idx + self.hidden_size * self.output_size].reshape(self.output_size, self.hidden_size)
-        idx += self.hidden_size * self.output_size
-        b2 = self.genome[idx:idx + self.output_size]
+        hidden = np.tanh(np.dot(w1, inputs) + b1)
 
-        # Forward pass
-        h = np.tanh(np.dot(w1, inputs) + b1)
-        output = self.sigmoid(np.dot(w2, h) + b2)
+        # Determine game from one-hot input
+        is_flappy = inputs[-2] == 1.0
+        is_dino = inputs[-1] == 1.0
 
-        flappy_jump = output[0] > 0.5
-        dino_jump = output[1] > 0.5
-        duck = output[2] > 0.5
+        flappy_jump = dino_jump = duck = False
+
+        if is_flappy:
+            wf = self.genome[idx:idx + self.wf_size].reshape(self.flappy_output_size, self.hidden_size)
+            idx += self.wf_size
+            bf = self.genome[idx:idx + self.bf_size]
+            idx += self.bf_size
+
+            output = self.sigmoid(np.dot(wf, hidden) + bf)
+            flappy_jump = output[0] > 0.5
+
+        elif is_dino:
+            idx += self.wf_size + self.bf_size  # skip flappy weights
+
+            wd = self.genome[idx:idx + self.wd_size].reshape(self.dino_output_size, self.hidden_size)
+            idx += self.wd_size
+            bd = self.genome[idx:idx + self.bd_size]
+            idx += self.bd_size
+
+            output = self.sigmoid(np.dot(wd, hidden) + bd)
+            dino_jump = output[0] > 0.5
+            duck = output[1] > 0.5
 
         return flappy_jump, dino_jump, duck
 

@@ -53,7 +53,7 @@ class DinoVisualizer:
             y_vel,       # Vertical velocity
             dx,          # Horizontal distance
             obstacle_y,  # Vertical distance (or use height if more useful)
-            10.0         # Game ID
+            0.0, 1.0     # One-hot: [Flappy, Dino]
         ]
 
     def find_next_obstacle(self, core):
@@ -196,10 +196,7 @@ class DinoVisualizer:
             next_obstacle = core.get_next_obstacle()
 
             # Build input vector
-            if next_obstacle:
-                inputs = self.get_inputs(dino, next_obstacle)
-            else:
-                inputs = [1.0, 0.0, 0.0, 0.0, 1.0]
+            inputs = self.get_inputs(dino, next_obstacle)
 
             _, dino_jump, duck = agent.decide(inputs)
             if dino_jump:

@@ -14,7 +14,7 @@ from games.dino.dino import Dino
 from games.dino import config as dino_config
 
 NUM_AGENTS = 2000
-INPUT_SIZE = 5
+INPUT_SIZE = 4
 MODEL_SAVE_PATH = "model/multigame_best.pkl"
 
 def get_flappy_inputs(bird, pipe):
@@ -25,7 +25,7 @@ def get_flappy_inputs(bird, pipe):
         bird.velocity_y / 10.0,                       # vertical velocity
         dx / flappy_config.SCREEN_WIDTH,              # horizontal distance
         dy / flappy_config.SCREEN_HEIGHT,             # vertical distance to gap
-        0.0                                           # Game ID
+        1.0, 0.0  # One-hot: [Flappy, Dino]           # Game ID
     ]
 
 def get_dino_inputs(dino, obstacle):
@@ -39,7 +39,7 @@ def get_dino_inputs(dino, obstacle):
         y_vel,              # Vertical velocity
         dx,                 # Distance to obstacle
         obstacle_y,         # Obstacle vertical position
-        10.0                # Game ID
+        0.0, 1.0            # One-hot: [Flappy, Dino]
     ]
 
 def evaluate_on_flappy(agents, bird_sprite, pipe_sprite):
@@ -63,13 +63,13 @@ def evaluate_on_flappy(agents, bird_sprite, pipe_sprite):
             if next_pipe:
                 inputs = get_flappy_inputs(bird, next_pipe)
             else:
-                inputs = [bird.y / flappy_config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 0.0]
+                inputs = [bird.y / flappy_config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 1.0, 0.0]  # Default inputs if no pipe
             flappy_jump, _, _ = agents[i].decide(inputs)
             decisions.append(flappy_jump)
         flappy.update(agent_decisions=decisions)
 
     for i, bird in enumerate(flappy.birds):
-        scores[i] = bird.score
+        scores[i] = bird.score * 100 + bird.time_alive / 10
 
     return scores
 
@@ -139,3 +139,4 @@ if __name__ == "__main__":
     multi_train()
 # This script trains agents on both Flappy Bird and Dino games using a multi-game approach.
 # It evaluates the agents on both games, combines their fitness scores, and evolves them over generations.
+

@@ -6,7 +6,7 @@ from core.agent import Agent
 from core.model_utils import save_best_agent, load_best_agent, create_agent_from_genome
 from core.ga import evolve_agents
 
-INPUT_SIZE = 5
+INPUT_SIZE = 4
 
 class VisualTrainer:
     def __init__(self):
@@ -119,7 +119,7 @@ class VisualTrainer:
             bird.velocity_y / 10.0,            # assuming max velocity ~10
             dx / config.SCREEN_WIDTH,
             dy / config.SCREEN_HEIGHT,
-            0
+            1.0, 0.0  # One-hot: [Flappy, Dino]
         ]
         return inputs
 
@@ -148,7 +148,7 @@ class VisualTrainer:
             if next_pipe is not None:
                 inputs = self.get_inputs(bird, next_pipe)
             else:
-                inputs = [bird.y / config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 0.0]
+                inputs = [bird.y / config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 1.0, 0.0]  # Default inputs if no pipe
 
             flappy_jump, _, _ = agent.decide(inputs)
             decisions.append(flappy_jump)
@@ -195,7 +195,7 @@ class VisualTrainer:
             if next_pipe:
                 inputs = self.get_inputs(bird, next_pipe)
             else:
-                inputs = [bird.y / config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 0.0]
+                inputs = [bird.y / config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 1.0, 0.0]  # Default inputs if no pipe
 
             flappy_jump, _, _ = agent.decide(inputs)
             if flappy_jump:
