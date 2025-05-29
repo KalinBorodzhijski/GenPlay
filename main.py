@@ -6,7 +6,7 @@ from games.flappy.game import FlappyGame
 from games.dino.visualizer import DinoVisualizer as DinoTrainer
 from games.dino.game import DinoGame
 
-from core.multi_train import multi_train
+from core.genetic_algorithm.multi_train import multi_train
 
 def prompt_game():
     print("\nSelect game:")

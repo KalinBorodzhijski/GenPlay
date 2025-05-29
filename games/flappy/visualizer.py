@@ -2,9 +2,9 @@ import pygame
 import time
 from games.flappy import config
 from games.flappy.core_game import GameCore
-from core.agent import Agent
-from core.model_utils import save_best_agent, load_best_agent, create_agent_from_genome
-from core.ga import evolve_agents
+from core.genetic_algorithm.agent import Agent
+from core.genetic_algorithm.model_utils import save_best_agent, load_best_agent, create_agent_from_genome
+from core.genetic_algorithm.ga import evolve_agents
 
 INPUT_SIZE = 4
 
