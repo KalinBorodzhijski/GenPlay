@@ -1,5 +1,5 @@
 import numpy as np
-from core.agent import Agent
+from core.genetic_algorithm.agent import Agent
 
 def evolve_agents(old_agents: list[Agent], fitness_scores: list[float], retain_top: float = 0.2, mutate_rate: float = 0.1):
     """

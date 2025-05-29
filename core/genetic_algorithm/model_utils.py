@@ -1,7 +1,7 @@
 import pickle
 import numpy as np
 import os
-from core.agent import Agent
+from core.genetic_algorithm.agent import Agent
 
 
 def save_best_agent(agent: Agent, fitness: float, generation: int, save_path: str):
