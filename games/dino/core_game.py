@@ -17,7 +17,7 @@ class DinoCore:
         self.obstacles = []
         self.last_spawn_time = pygame.time.get_ticks()
         self.next_spawn_delay = random.randint(config.MIN_OBSTACLE_DELAY, config.MAX_OBSTACLE_DELAY)
-        self.game_speed = 6
+        self.game_speed = config.BASE_SPEED
         self.speed_timer = pygame.time.get_ticks()
 
     def spawn_obstacle(self):

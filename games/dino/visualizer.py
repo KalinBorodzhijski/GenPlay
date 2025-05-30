@@ -2,6 +2,7 @@ import pygame
 import time
 import games.dino.config as dino_config
 from games.dino.dino import Dino
+from games.dino.obstacles import FlyingObstacle
 from games.dino.core_game import DinoCore
 from core.agent import Agent
 from core.ga import evolve_agents
@@ -39,21 +40,35 @@ class DinoVisualizer:
     def get_inputs(self, dino, obstacle):
         if obstacle:
             dx = (obstacle.x - dino.x) / dino_config.SCREEN_WIDTH
-            obstacle_y = obstacle.y / dino_config.SCREEN_HEIGHT
+            dy = (obstacle.y - dino.y) / dino_config.SCREEN_HEIGHT
             obstacle_height = obstacle.height / dino_config.SCREEN_HEIGHT
+            obstacle_width = obstacle.width / dino_config.SCREEN_WIDTH
+            obstacle_speed = obstacle.speed / dino_config.BASE_SPEED
+            time_to_collision = dx / (obstacle.speed + 1e-5)
+            is_flying = 1.0 if isinstance(obstacle, FlyingObstacle) else 0.0
+            is_ground = 1.0 - is_flying
         else:
             dx = 1.0
-            obstacle_y = 0.0
+            dy = 0.0
             obstacle_height = 0.0
-
-        y_vel = dino.velocity_y / 10.0
+            obstacle_width = 0.0
+            obstacle_speed = 0.0
+            time_to_collision = 1.0
+            is_flying = 0.0
+            is_ground = 0.0
 
         return [
-            0.0,         # Fake vertical position for Dino
-            y_vel,       # Vertical velocity
-            dx,          # Horizontal distance
-            obstacle_y,  # Vertical distance (or use height if more useful)
-            0.0, 1.0     # One-hot: [Flappy, Dino]
+            dino.y / dino_config.SCREEN_HEIGHT,
+            dino.velocity_y / 10.0,
+            dx,
+            dy,
+            obstacle_height,
+            obstacle_width,
+            obstacle_speed,
+            time_to_collision,
+            is_flying,
+            is_ground,
+            0.0, 1.0  # one-hot: Flappy, Dino
         ]
 
     def find_next_obstacle(self, core):
@@ -228,13 +243,20 @@ class DinoVisualizer:
             self.draw_text(f"Best Agent - Gen {best['generation']} / Fitness: {best['fitness']:.2f}", 10, 10)
             self.draw_text(f"Score: {getattr(dino, 'score', 0)}", 10, 40)
             input_labels = [
-                "Fake Y Pos",
-                "Vertical Velocity",
-                "Distance to Obstacle",
-                "Obstacle Y",
-                "Flappy Game",
-                "Dino Game"
+                "Dino Y",              # 1
+                "Vertical Velocity",   # 2
+                "Distance to Obstacle",# 3
+                "Vertical Distance to Obstacle",  # 4
+                "Obstacle Height",     # 5
+                "Obstacle Width",      # 6
+                "Obstacle Speed",      # 7
+                "Time to Collision",   # 8
+                "Is Flying Obstacle",  # 9
+                "Is Ground Obstacle",  #10
+                "Flappy Game",         #11
+                "Dino Game"            #12
             ]
+
             output_labels = ["Dino Jump", "Duck"]
             if visualizer_enabled:
                 draw_network_visualization(self.screen, activations,input_labels=input_labels, output_labels=output_labels)

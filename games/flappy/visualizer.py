@@ -8,7 +8,7 @@ from core.ga import evolve_agents
 
 from core.network_visualization import draw_network_visualization
 
-INPUT_SIZE = 4
+INPUT_SIZE = 10
 
 class VisualTrainer:
     def __init__(self):
@@ -106,24 +106,33 @@ class VisualTrainer:
 
 
     def get_inputs(self, bird, next_pipe):
-        """
-        Returns a normalized input vector for the neural network.
+        if next_pipe:
+            dx = (next_pipe.x - bird.x) / config.SCREEN_WIDTH
+            dy = ((next_pipe.gap_y + next_pipe.gap_size / 2) - bird.y) / config.SCREEN_HEIGHT
+            gap_size = next_pipe.gap_size / config.SCREEN_HEIGHT
+            pipe_speed = next_pipe.speed / config.PIPE_SPEED
+            time_to_pipe = dx / (next_pipe.speed + 1e-5)
+        else:
+            dx = 1.0
+            dy = 0.0
+            gap_size = 0.0
+            pipe_speed = 1.0
+            time_to_pipe = 1.0
 
-        :param bird: Bird object
-        :param next_pipe: Pipe object
-        :return: List of 4 float values
-        """
-        dx = next_pipe.x - bird.x
-        dy = (next_pipe.gap_y + next_pipe.gap_size / 2) - bird.y
-
-        inputs = [
-            bird.y / config.SCREEN_HEIGHT,
+        return [
+            bird.y / config.SCREEN_HEIGHT, 
             bird.velocity_y / 10.0,
-            dx / config.SCREEN_WIDTH,
-            dy / config.SCREEN_HEIGHT,
-            1.0, 0.0  # One-hot: [Flappy, Dino]
+            dx,
+            dy,
+            gap_size, 
+            pipe_speed,
+            time_to_pipe,
+            0.0,                                  # unused for Flappy
+            0.0,                                  # unused for Flappy
+            0.0,                                  # unused for Flappy
+            1.0,                                  # One-hot: Flappy
+            0.0                                   # One-hot: not Dino
         ]
-        return inputs
 
 
     def find_next_pipe(self):
@@ -146,12 +155,7 @@ class VisualTrainer:
                 continue
 
             agent = self.agents[i]
-
-            if next_pipe is not None:
-                inputs = self.get_inputs(bird, next_pipe)
-            else:
-                inputs = [bird.y / config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 1.0, 0.0]  # Default inputs if no pipe
-
+            inputs = self.get_inputs(bird, next_pipe)
             flappy_jump, _, _ = agent.decide(inputs)
             decisions.append(flappy_jump)
 
@@ -198,10 +202,7 @@ class VisualTrainer:
 
             next_pipe = self.find_next_pipe_for_bird(bird, engine.pipes)
 
-            if next_pipe:
-                inputs = self.get_inputs(bird, next_pipe)
-            else:
-                inputs = [bird.y / config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 1.0, 0.0]  # Default inputs if no pipe
+            inputs = self.get_inputs(bird, next_pipe)
 
             flappy_jump, _, _, activations = agent.decide_with_activations(inputs)
             if flappy_jump:
@@ -217,13 +218,20 @@ class VisualTrainer:
             self.draw_text(f"Best Agent - Gen {best['generation']} / Fitness: {best['fitness']}", 10, 10)
             self.draw_text(f"Score: {engine.score}", 10, 40)
             input_labels = [
-                "Bird Y",
-                "Velocity",
-                "Distance to Pipe",
-                "Pipe Gap Y",
-                "Flappy Game",
-                "Dino Game"
+                "Bird Y",              # 1
+                "Vertical Velocity",   # 2
+                "Distance to Pipe",    # 3
+                "Distance to Gap Center",  # 4
+                "Gap Size",            # 5
+                "Pipe Speed",          # 6
+                "Time to Pipe",        # 7
+                "Unused (0)",          # 8
+                "Unused (0)",          # 9
+                "Unused (0)",          #10
+                "Flappy Game",         #11
+                "Dino Game"            #12
             ]
+
             output_labels = ["Flappy Jump"]
 
             if visualizer_enabled:

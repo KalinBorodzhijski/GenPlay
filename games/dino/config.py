@@ -13,6 +13,8 @@ FPS = 60
 DINO_WIDTH = 40
 DINO_HEIGHT = 40
 
+BASE_SPEED = 6.0
+
 MIN_OBSTACLE_DELAY = 600    # ms
 MAX_OBSTACLE_DELAY = 1500   # ms
 
@@ -26,6 +28,6 @@ BACKGROUND_IMAGE = os.path.join(ASSETS_PATH, "background.jpg")
 
 # Training parameters
 NUM_AGENTS = 1000
-INPUT_SIZE = 4
+INPUT_SIZE = 10
 
 SAVE_MODEL_PATH = "model/dino_best.pkl"

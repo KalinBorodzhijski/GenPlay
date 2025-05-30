@@ -11,35 +11,71 @@ from games.flappy import config as flappy_config
 
 from games.dino.core_game import DinoCore
 from games.dino.dino import Dino
+from games.dino.obstacles import FlyingObstacle
 from games.dino import config as dino_config
 
 NUM_AGENTS = 2000
-INPUT_SIZE = 4
+INPUT_SIZE = 10
 MODEL_SAVE_PATH = "model/multigame_best.pkl"
 
-def get_flappy_inputs(bird, pipe):
-    dx = pipe.x - bird.x
-    dy = (pipe.gap_y + pipe.gap_size / 2) - bird.y
+def get_flappy_inputs(bird, next_pipe):
+    if next_pipe:
+        dx = (next_pipe.x - bird.x) / flappy_config.SCREEN_WIDTH
+        dy = ((next_pipe.gap_y + next_pipe.gap_size / 2) - bird.y) / flappy_config.SCREEN_HEIGHT
+        gap_size = next_pipe.gap_size / flappy_config.SCREEN_HEIGHT
+        pipe_speed = next_pipe.speed / flappy_config.PIPE_SPEED
+        time_to_pipe = dx / (next_pipe.speed + 1e-5)
+    else:
+        dx = 1.0
+        dy = 0.0
+        gap_size = 0.0
+        pipe_speed = 1.0
+        time_to_pipe = 1.0
+
     return [
-        bird.y / flappy_config.SCREEN_HEIGHT,         # vertical position
-        bird.velocity_y / 10.0,                       # vertical velocity
-        dx / flappy_config.SCREEN_WIDTH,              # horizontal distance
-        dy / flappy_config.SCREEN_HEIGHT,             # vertical distance to gap
-        1.0, 0.0  # One-hot: [Flappy, Dino]           # Game ID
+        bird.y / flappy_config.SCREEN_HEIGHT, 
+        bird.velocity_y / 10.0,               
+        dx,                                   
+        dy,                                   
+        gap_size,                             
+        pipe_speed,                           
+        time_to_pipe,                         
+        0.0, 0.0, 0.0, 1.0, 0.0
     ]
 
 def get_dino_inputs(dino, obstacle):
-    dx = (obstacle.x - dino.x) / dino_config.SCREEN_WIDTH if obstacle else 1.0
-    obstacle_y = obstacle.y / dino_config.SCREEN_HEIGHT if obstacle else 0.0
-    obstacle_height = obstacle.height / dino_config.SCREEN_HEIGHT if obstacle else 0.0
-    y_vel = dino.velocity_y / 10.0
+    if obstacle:
+        dx = (obstacle.x - dino.x) / dino_config.SCREEN_WIDTH
+        dy = (obstacle.y - dino.y) / dino_config.SCREEN_HEIGHT
+        obstacle_height = obstacle.height / dino_config.SCREEN_HEIGHT
+        obstacle_width = obstacle.width / dino_config.SCREEN_WIDTH
+        obstacle_speed = obstacle.speed / dino_config.BASE_SPEED
+        time_to_collision = dx / (obstacle.speed + 1e-5)
+        is_flying = 1.0 if isinstance(obstacle, FlyingObstacle) else 0.0
+        is_ground = 1.0 - is_flying
+    else:
+        dx = 1.0
+        dy = 0.0
+        obstacle_height = 0.0
+        obstacle_width = 0.0
+        obstacle_speed = 0.0
+        time_to_collision = 1.0
+        is_flying = 0.0
+        is_ground = 0.0
 
     return [
-        0.0,                # Fake Y position (Dino doesn't use it)
-        y_vel,              # Vertical velocity
-        dx,                 # Distance to obstacle
-        obstacle_y,         # Obstacle vertical position
-        0.0, 1.0            # One-hot: [Flappy, Dino]
+        dino.y / dino_config.SCREEN_HEIGHT,   # 1
+        dino.velocity_y / 10.0,               # 2
+        dx,                                   # 3
+        dy,                                   # 4
+        obstacle_height,                      # 5
+        obstacle_width,                       # 6
+        obstacle_speed,                       # 7
+        time_to_collision,                    # 8
+        is_flying,                            # 9
+        is_ground,                            #10
+        0.0,                                   #11 ← reserved for Flappy only
+        1.0                                    #12 ← One-hot: Dino
     ]
 
 def evaluate_on_flappy(agents, bird_sprite, pipe_sprite):
@@ -60,10 +96,8 @@ def evaluate_on_flappy(agents, bird_sprite, pipe_sprite):
             if not bird.alive:
                 decisions.append(False)
                 continue
-            if next_pipe:
-                inputs = get_flappy_inputs(bird, next_pipe)
-            else:
-                inputs = [bird.y / flappy_config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 1.0, 0.0]  # Default inputs if no pipe
+            inputs = get_flappy_inputs(bird, next_pipe)
+            
             flappy_jump, _, _ = agents[i].decide(inputs)
             decisions.append(flappy_jump)
         flappy.update(agent_decisions=decisions)
