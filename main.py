@@ -21,8 +21,7 @@ def prompt_mode():
     print("\nSelect mode:")
     print("1 - Play manually")
     print("2 - Train agents")
-    print("3 - Watch best agent for this game")
-    print("4 - Watch best combined (multi-game) agent")
+    print("3 - Watch best agent")
     print("B - Back to game selection")
     print("Q - Quit")
     return input("Enter your choice: ").strip().lower()
@@ -42,10 +41,6 @@ def run_game_menu(game_name, GameClass, TrainerClass):
         elif choice == "3":
             trainer = TrainerClass()
             trainer.watch_best()
-
-        elif choice == "4":
-            trainer = TrainerClass()
-            trainer.watch_best("model/multigame_best.pkl")
 
         elif choice in ("b", "back"):
             break
