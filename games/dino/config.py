@@ -24,6 +24,7 @@ ASSETS_PATH = os.path.join(os.path.dirname(__file__), "assets")
 
 DINO_SPRITESHEET = os.path.join(ASSETS_PATH, "dino_spritesheet.png")
 CACTUS_SPRITE = os.path.join(ASSETS_PATH, "cactus.png")
+BIRD_SPRITE = os.path.join(ASSETS_PATH, "bird.png")
 BACKGROUND_IMAGE = os.path.join(ASSETS_PATH, "background.jpg")
 
 # Training parameters
