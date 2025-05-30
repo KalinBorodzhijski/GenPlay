@@ -7,7 +7,7 @@ from core.agent import Agent
 from core.ga import evolve_agents
 from core.model_utils import *
 
-
+from core.network_visualization import draw_network_visualization
 
 class DinoVisualizer:
     def __init__(self):
@@ -170,6 +170,8 @@ class DinoVisualizer:
         Loads and plays the best saved agent on the Dino game.
         :param model_path: Path to the saved model. If None, uses the default path.
         """
+        visualizer_enabled = False
+
         path = model_path if model_path else dino_config.SAVE_MODEL_PATH
         best = load_best_agent(path)
         if not best:
@@ -189,6 +191,9 @@ class DinoVisualizer:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_v:
+                        visualizer_enabled = not visualizer_enabled
 
             core.update([dino])  # update game world with the single dino
 
@@ -198,7 +203,7 @@ class DinoVisualizer:
             # Build input vector
             inputs = self.get_inputs(dino, next_obstacle)
 
-            _, dino_jump, duck = agent.decide(inputs)
+            _, dino_jump, duck, activations = agent.decide_with_activations(inputs)
             if dino_jump:
                 dino.jump()
                 dino.stand_up()
@@ -222,6 +227,17 @@ class DinoVisualizer:
 
             self.draw_text(f"Best Agent - Gen {best['generation']} / Fitness: {best['fitness']:.2f}", 10, 10)
             self.draw_text(f"Score: {getattr(dino, 'score', 0)}", 10, 40)
+            input_labels = [
+                "Fake Y Pos",
+                "Vertical Velocity",
+                "Distance to Obstacle",
+                "Obstacle Y",
+                "Flappy Game",
+                "Dino Game"
+            ]
+            output_labels = ["Dino Jump", "Duck"]
+            if visualizer_enabled:
+                draw_network_visualization(self.screen, activations,input_labels=input_labels, output_labels=output_labels)
 
             pygame.display.flip()
 

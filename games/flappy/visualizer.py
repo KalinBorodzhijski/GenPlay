@@ -6,6 +6,8 @@ from core.agent import Agent
 from core.model_utils import save_best_agent, load_best_agent, create_agent_from_genome
 from core.ga import evolve_agents
 
+from core.network_visualization import draw_network_visualization
+
 INPUT_SIZE = 4
 
 class VisualTrainer:
@@ -116,7 +118,7 @@ class VisualTrainer:
 
         inputs = [
             bird.y / config.SCREEN_HEIGHT,
-            bird.velocity_y / 10.0,            # assuming max velocity ~10
+            bird.velocity_y / 10.0,
             dx / config.SCREEN_WIDTH,
             dy / config.SCREEN_HEIGHT,
             1.0, 0.0  # One-hot: [Flappy, Dino]
@@ -170,6 +172,7 @@ class VisualTrainer:
         Loads and plays the best saved agent.
         :param model_path: Path to the saved model. If None, uses the default path.
         """
+        visualizer_enabled = False
         path = model_path if model_path else config.SAVE_MODEL_PATH
         best = load_best_agent(path)
         if not best:
@@ -189,6 +192,9 @@ class VisualTrainer:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_v:
+                        visualizer_enabled = not visualizer_enabled
 
             next_pipe = self.find_next_pipe_for_bird(bird, engine.pipes)
 
@@ -197,7 +203,7 @@ class VisualTrainer:
             else:
                 inputs = [bird.y / config.SCREEN_HEIGHT, bird.velocity_y / 10.0, 1.0, 0.0, 1.0, 0.0]  # Default inputs if no pipe
 
-            flappy_jump, _, _ = agent.decide(inputs)
+            flappy_jump, _, _, activations = agent.decide_with_activations(inputs)
             if flappy_jump:
                 bird.jump()
 
@@ -210,7 +216,23 @@ class VisualTrainer:
 
             self.draw_text(f"Best Agent - Gen {best['generation']} / Fitness: {best['fitness']}", 10, 10)
             self.draw_text(f"Score: {engine.score}", 10, 40)
+            input_labels = [
+                "Bird Y",
+                "Velocity",
+                "Distance to Pipe",
+                "Pipe Gap Y",
+                "Flappy Game",
+                "Dino Game"
+            ]
+            output_labels = ["Flappy Jump"]
 
+            if visualizer_enabled:
+                draw_network_visualization(
+                    self.screen,
+                    activations,
+                    input_labels=input_labels,
+                    output_labels=output_labels
+                )
             pygame.display.flip()
 
             if not bird.alive:

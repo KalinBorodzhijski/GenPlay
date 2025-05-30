@@ -114,5 +114,56 @@ class Agent:
 
         return flappy_jump, dino_jump, duck
 
+    def decide_with_activations(self, inputs: list[float]) -> tuple[bool, bool, bool, dict]:
+        """
+        Like decide(), but also returns a dict of activations for visualization.
+        """
+        inputs = np.array(inputs)
+        activations = {'input': inputs}
+        idx = 0
+
+        # Shared hidden layer
+        w1 = self.genome[idx:idx + self.w1_size].reshape(self.hidden_size, self.input_size)
+        idx += self.w1_size
+        b1 = self.genome[idx:idx + self.b1_size]
+        idx += self.b1_size
+
+        hidden = np.tanh(np.dot(w1, inputs) + b1)
+        activations['hidden'] = hidden
+        activations['w1'] = w1
+
+        # Determine game from one-hot input
+        is_flappy = inputs[-2] == 1.0
+        is_dino = inputs[-1] == 1.0
+
+        flappy_jump = dino_jump = duck = False
+
+        if is_flappy:
+            wf = self.genome[idx:idx + self.wf_size].reshape(self.flappy_output_size, self.hidden_size)
+            idx += self.wf_size
+            bf = self.genome[idx:idx + self.bf_size]
+            idx += self.bf_size
+
+            output = self.sigmoid(np.dot(wf, hidden) + bf)
+            flappy_jump = output[0] > 0.5
+            activations['output'] = output
+            activations['w_output'] = wf
+
+        elif is_dino:
+            idx += self.wf_size + self.bf_size  # skip flappy weights
+
+            wd = self.genome[idx:idx + self.wd_size].reshape(self.dino_output_size, self.hidden_size)
+            idx += self.wd_size
+            bd = self.genome[idx:idx + self.bd_size]
+            idx += self.bd_size
+
+            output = self.sigmoid(np.dot(wd, hidden) + bd)
+            dino_jump = output[0] > 0.5
+            duck = output[1] > 0.5
+            activations['output'] = output
+            activations['w_output'] = wd
+
+        return flappy_jump, dino_jump, duck, activations
+
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
