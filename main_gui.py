@@ -49,7 +49,7 @@ class GenPlayApp:
         tk.Button(self.root, text="Play manually", width=25, command=lambda: GameClass().run()).pack(pady=5)
         tk.Button(self.root, text="Train agents", width=25, command=lambda: TrainerClass().run()).pack(pady=5)
         tk.Button(self.root, text="Watch best agent", width=25, command=lambda: TrainerClass().watch_best()).pack(pady=5)
-        tk.Button(self.root, text="Compare experiments", width=25, command=lambda: self.setup_experiment_gui(game_name)).pack(pady=5)
+        tk.Button(self.root, text="Compare experiments", width=25, command=lambda: self.experiment_setup(game_name, GameClass, TrainerClass)).pack(pady=5)
         tk.Button(self.root, text="Back", width=25, command=self.main_menu).pack(pady=20)
 
     def run_multi_game(self):
@@ -82,6 +82,11 @@ class GenPlayApp:
                 sys.stdout = sys.__stdout__
 
         threading.Thread(target=start_training, daemon=True).start()
+
+    def experiment_setup(self, game_type, GameClass, TrainerClass):
+        self.GameClass = GameClass
+        self.TrainerClass = TrainerClass
+        self.setup_experiment_gui(game_type)
 
     def setup_experiment_gui(self, game_type):
         self.clear_window()
@@ -178,7 +183,7 @@ class GenPlayApp:
             visualizer.run()
 
         tk.Button(footer, text="Start Comparison", command=start_experiments).pack(side="left", padx=10)
-        tk.Button(footer, text="Back", command=lambda: self.game_mode_menu(game_type, None, None)).pack(side="left", padx=10)
+        tk.Button(self.root, text="Back", command=lambda: self.game_mode_menu(game_type, self.GameClass, self.TrainerClass)).pack()
 
     def clear_window(self):
         for widget in self.root.winfo_children():
