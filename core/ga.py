@@ -1,7 +1,7 @@
 import numpy as np
 from core.agent import Agent
 
-def evolve_agents(old_agents: list[Agent], fitness_scores: list[float], retain_top: float = 0.2, mutate_rate: float = 0.1):
+def evolve_agents(old_agents: list[Agent], fitness_scores: list[float], retain_top: float, mutate_rate: float):
     """
     Evolves a population of agents using elitism and mutation.
 

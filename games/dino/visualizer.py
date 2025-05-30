@@ -9,7 +9,7 @@ from core.ga import evolve_agents
 from core.model_utils import *
 
 from core.network_visualization import draw_network_visualization
-
+from core.experiments.experiment_config import ExperimentConfig
 class DinoVisualizer:
     def __init__(self):
         pygame.init()
@@ -268,3 +268,81 @@ class DinoVisualizer:
                 running = False
 
         pygame.quit()
+
+
+class DinoVisualizerWithConfig(DinoVisualizer):
+    def __init__(self, experiment_config: ExperimentConfig, shared_screen):
+        self.experiment_config = experiment_config
+        self.screen = shared_screen
+        self.position = experiment_config.position
+        self.mutation_rate = experiment_config.mutation_rate
+        self.retain_top = experiment_config.retain_top
+        dino_config.NUM_AGENTS = experiment_config.num_agents
+
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont("Arial", 24)
+
+        self.generation = 1
+        self.start_time = time.time()
+        self.agents = []
+        self.core = DinoCore()
+
+        self.reset_generation()
+
+    def reset_generation(self):
+        if self.agents:
+            fitness_scores = [self.scores[i] for i in range(len(self.agents))]
+            self.agents = evolve_agents(
+                self.agents,
+                fitness_scores,
+                retain_top=self.retain_top,
+                mutate_rate=self.mutation_rate
+            )
+        else:
+            self.agents = [
+                Agent(dino_config.INPUT_SIZE)
+                for _ in range(self.experiment_config.num_agents)
+            ]
+
+        self.core.reset()
+        self.dinos = [
+            Dino(
+                50,
+                dino_config.SCREEN_HEIGHT - dino_config.GROUND_HEIGHT - dino_config.DINO_HEIGHT
+            ) for _ in range(self.experiment_config.num_agents)
+        ]
+        self.scores = [0 for _ in range(self.experiment_config.num_agents)]
+
+    def draw(self):
+        surface = pygame.Surface((dino_config.SCREEN_WIDTH, dino_config.SCREEN_HEIGHT))
+        surface.fill((255, 255, 255))
+
+        pygame.draw.rect(
+            surface,
+            (100, 100, 100),
+            (0, dino_config.SCREEN_HEIGHT - dino_config.GROUND_HEIGHT,
+             dino_config.SCREEN_WIDTH, dino_config.GROUND_HEIGHT)
+        )
+
+        for obs in self.core.obstacles:
+            obs.draw(surface)
+
+        for dino in self.dinos:
+            if dino.alive:
+                dino.draw(surface)
+
+        elapsed = time.time() - self.start_time
+        alive_count = sum(1 for d in self.dinos if d.alive)
+        current_score = max(self.scores[i] for i in range(len(self.scores)) if self.dinos[i].alive) if any(d.alive for d in self.dinos) else 0
+
+        self.draw_text_on(surface, f"{self.experiment_config.label}", 10, 10)
+        self.draw_text_on(surface, f"Gen: {self.generation}", 10, 40)
+        self.draw_text_on(surface, f"Time: {elapsed:.1f}s", 10, 70)
+        self.draw_text_on(surface, f"Alive: {alive_count}/{self.experiment_config.num_agents}", 10, 100)
+        self.draw_text_on(surface, f"Score: {current_score}", 10, 130)
+
+        self.screen.blit(surface, self.position)
+
+    def draw_text_on(self, surface, text, x, y):
+        label = self.font.render(text, True, (0, 0, 0))
+        surface.blit(label, (x, y))
